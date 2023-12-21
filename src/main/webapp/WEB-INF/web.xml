@@ -1,0 +1,26 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+  <display-name>Archetype Created Web Application</display-name>
+
+<!--  配置自定义的Servlet（前端控制前）文件-->
+  <servlet>
+    <servlet-name>cusDispatcherServlet</servlet-name>
+    <servlet-class>com.mvc.servlet.CusDispatcherServlet</servlet-class>
+<!--    配置CusDispatcherServlet-->
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>classpath:cusspringmvc.xml</param-value>
+    </init-param>
+    <!--        在 web 项目启动时，自动加载DispatcherServlet对象-->
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>cusDispatcherServlet</servlet-name>
+    <!--        1.url-pattern表示用户的请求都会经过DispatcherServlet处理，支持 Rest 风格url请求-->
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+
+</web-app>
