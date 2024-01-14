@@ -5,6 +5,7 @@ import com.mvc.annotation.Service;
 import com.mvc.handler.CusHandler;
 import com.mvc.xml.XmlParser;
 import org.apache.commons.lang3.StringUtils;
+import org.dom4j.io.SAXReader;
 
 import java.io.File;
 import java.net.URL;
@@ -16,15 +17,21 @@ import java.util.concurrent.ConcurrentHashMap;
  * 表示自定义的Spring容器
  */
 public class CusWebApplicationContext {
+
     //存放扫描包以及子包的类的全路径
     private List<String> classFullPathList = new ArrayList<String>();
     //定义容器
     public ConcurrentHashMap<String, Object> ioc = new ConcurrentHashMap<String, Object>();
+    //从web.xml中获取的配置的spring配置文件名称
+    private String contextConfigLocation;
 
     //前端控制器DispatcherServlet是随着Tomcat的启动时启动,在前端控制器DispatcherServlet启动的时候初始化容器
     //编写方法,完成自定义Spring容器初始化
     public void init() {
-        String basePackage = XmlParser.getBasePackage("cusspringmvc.xml");
+        //这里应该动态的从web.xml中动态的获取，在web.xml中有配置文件
+        //String basePackage = XmlParser.getBasePackage("cusspringmvc.xml");
+
+        String basePackage = XmlParser.getBasePackage(contextConfigLocation.split(":")[1]);
         String[] AllPackageArray = basePackage.split(",");
         if (AllPackageArray.length > 0) {
             for (String pack : AllPackageArray) {
@@ -77,15 +84,23 @@ public class CusWebApplicationContext {
                     Class<?> aClass = Class.forName(s);
                     //判断有没有注解
                     if (aClass.isAnnotationPresent(Controller.class) || aClass.isAnnotationPresent(Service.class)) {
-                            ClassLoader classLoader = aClass.getClassLoader();
-                            //存在注解,注入到容器
-                            //首字母小写
-                            ioc.put(StringUtils.uncapitalize(className), classLoader.loadClass(s).newInstance());
+                        ClassLoader classLoader = aClass.getClassLoader();
+                        //存在注解,注入到容器
+                        //首字母小写
+                        ioc.put(StringUtils.uncapitalize(className), classLoader.loadClass(s).newInstance());
                     }
                 } catch (Exception e) {
                     System.out.println("发生了错误" + e);
                 }
             }
         }
+    }
+
+
+    public CusWebApplicationContext() {
+    }
+
+    public CusWebApplicationContext(String contextConfigLocation) {
+        this.contextConfigLocation = contextConfigLocation;
     }
 }

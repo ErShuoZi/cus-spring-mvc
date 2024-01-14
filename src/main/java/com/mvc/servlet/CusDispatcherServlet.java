@@ -5,6 +5,7 @@ import com.mvc.annotation.RequestMapping;
 import com.mvc.context.CusWebApplicationContext;
 import com.mvc.handler.CusHandler;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -26,9 +27,12 @@ public class CusDispatcherServlet extends HttpServlet {
     private CusWebApplicationContext cusWebApplicationContext = null;
 
     @Override
-    public void init() throws ServletException {
+    public void init(ServletConfig servletConfig) throws ServletException {
+        //获取web.xml中的配置信息
+        String contextConfigLocation = servletConfig.getInitParameter("contextConfigLocation");
         //前端控制器DispatcherServlet是随着Tomcat的启动时启动,在前端控制器DispatcherServlet启动的时候初始化容器
-        cusWebApplicationContext = new CusWebApplicationContext();
+        //将配置的Spring配置文件名称传入
+        cusWebApplicationContext = new CusWebApplicationContext(contextConfigLocation);
         cusWebApplicationContext.init();
         //完成url和控制器方法的映射
         initHandlerMapping();
