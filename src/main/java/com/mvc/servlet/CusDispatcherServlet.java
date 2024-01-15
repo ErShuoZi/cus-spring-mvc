@@ -1,9 +1,11 @@
 package com.mvc.servlet;
 
 import com.entity.Monster;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mvc.annotation.Controller;
 import com.mvc.annotation.RequestMapping;
 import com.mvc.annotation.RequestParam;
+import com.mvc.annotation.ResponseBody;
 import com.mvc.context.CusWebApplicationContext;
 import com.mvc.handler.CusHandler;
 
@@ -175,12 +177,12 @@ public class CusDispatcherServlet extends HttpServlet {
                 }
 
                 //cusHandler.getMethod().invoke(cusHandler.getController(), request, response);
-                Object invoke = cusHandler.getMethod().invoke(cusHandler.getController(), params);
+                Object result = cusHandler.getMethod().invoke(cusHandler.getController(), params);
                 //对调用目标方法返回的结果进行解析,原生的Springmvc是通过弄了一个自定义解析器完成的
                 //我们简化,不弄自定义解析器
                 //判断是不是字符串
-                if (invoke instanceof String) {
-                    String viewName = (String) invoke;
+                if (result instanceof String) {
+                    String viewName = (String) result;
                     if(viewName.contains(":")){
                         String[] s = viewName.split(":");
                         String viewType = s[0];
@@ -196,6 +198,20 @@ public class CusDispatcherServlet extends HttpServlet {
                     }
                     else {
                         request.getRequestDispatcher(viewName).forward(request,response);
+                    }
+                }
+                //拓展
+                else if (result instanceof ArrayList){
+                    Method method = cusHandler.getMethod();
+                    if (method.isAnnotationPresent(ResponseBody.class)){
+                        //把result(ArrayList)转成json
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        String resultJson = objectMapper.writeValueAsString(result);
+                        response.setContentType("text/html;charset=utf-8");
+                        PrintWriter writer = response.getWriter();
+                        writer.write(resultJson);
+                        writer.flush();
+                        writer.close();
                     }
                 }
 

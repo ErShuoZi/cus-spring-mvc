@@ -1,16 +1,16 @@
 package com.controller;
 
 import com.entity.Monster;
-import com.mvc.annotation.Autowired;
-import com.mvc.annotation.Controller;
-import com.mvc.annotation.RequestMapping;
-import com.mvc.annotation.RequestParam;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mvc.annotation.*;
 import com.service.MonsterService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -49,7 +49,7 @@ public class MonsterController {
 
     //处理登录方法
     @RequestMapping(value = "/login")
-    public String login(HttpServletRequest request,HttpServletResponse response,String mname) {
+    public String login(HttpServletRequest request,HttpServletResponse response,@RequestParam(value = "monsterName") String mname) {
         boolean login = monsterService.login(mname);
         request.setAttribute("mName",mname);
         if (login) {
@@ -58,6 +58,16 @@ public class MonsterController {
         } else {
             return "forward:/login_error.jsp";
         }
+    }
+
+    @RequestMapping(value = "/listmonsterbyjson")
+    @ResponseBody //标识了该注解代表希望以json格式返回
+    //目标方法返回的结果是给springmvc底层,通过反射调用的位置
+    //我们在springmvc底层反射调用的位置.接收结果，解析
+    public List<Monster> listMonsterByJson(HttpServletRequest request,HttpServletResponse response) {
+        List<Monster> monsters = monsterService.listMonsters();
+        System.out.println(monsters);
+        return monsters;
     }
 
 
