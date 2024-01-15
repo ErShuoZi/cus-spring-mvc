@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -131,6 +132,12 @@ public class CusDispatcherServlet extends HttpServlet {
                 //要考虑实参的顺序问题
 
                 //1.获取http请求的参数集合
+                //处理提交的数据中文乱码问题
+                try {
+                    request.setCharacterEncoding("utf-8");
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
                 Map<String, String[]> parameterMap = request.getParameterMap();
                 //2.遍历parameterMap将请求参数按照顺序填充到实参数组
                 //返回的Map<String,String[]> String表示http的参数名；
@@ -168,11 +175,39 @@ public class CusDispatcherServlet extends HttpServlet {
                 }
 
                 //cusHandler.getMethod().invoke(cusHandler.getController(), request, response);
-                cusHandler.getMethod().invoke(cusHandler.getController(), params);
+                Object invoke = cusHandler.getMethod().invoke(cusHandler.getController(), params);
+                //对调用目标方法返回的结果进行解析,原生的Springmvc是通过弄了一个自定义解析器完成的
+                //我们简化,不弄自定义解析器
+                //判断是不是字符串
+                if (invoke instanceof String) {
+                    String viewName = (String) invoke;
+                    if(viewName.contains(":")){
+                        String[] s = viewName.split(":");
+                        String viewType = s[0];
+                        String viewPage = s[1];
+                        if ("forward".equals(viewType)) {
+                            //forward
+                            request.getRequestDispatcher(viewPage).forward(request,response);
+                        }
+                        else if ("redirect".equals(viewType)){
+                            //redirect
+                            response.sendRedirect(viewPage);
+                        }
+                    }
+                    else {
+                        request.getRequestDispatcher(viewName).forward(request,response);
+                    }
+                }
+
+
 
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             } catch (InvocationTargetException e) {
+                throw new RuntimeException(e);
+            } catch (ServletException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } else {

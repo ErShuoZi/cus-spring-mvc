@@ -17,6 +17,7 @@ import java.util.List;
 public class MonsterController {
     @Autowired
     private MonsterService monsterService;
+
     //编写方法,可以列出Monster List
     //Spring Mvc 支持原生的servlet api,所以这里会有HttpServletRequest request, HttpServletResponse response 这两个形参
     @RequestMapping(value = "/list/monster")
@@ -37,10 +38,25 @@ public class MonsterController {
 
     @RequestMapping(value = "/monster/find")
     //@RequestParam(value = "name")
-    public void findMonsterByName(HttpServletRequest request, HttpServletResponse response, String name){;
+    public void findMonsterByName(HttpServletRequest request, HttpServletResponse response, String name) {
+        ;
         List<Monster> findedMonsterList = monsterService.findMonsterByName(name);
         for (Monster monster : findedMonsterList) {
             System.out.println(monster);
+        }
+    }
+
+
+    //处理登录方法
+    @RequestMapping(value = "/login")
+    public String login(HttpServletRequest request,HttpServletResponse response,String mname) {
+        boolean login = monsterService.login(mname);
+        request.setAttribute("mName",mname);
+        if (login) {
+            return "forward:/login_ok.jsp";
+
+        } else {
+            return "forward:/login_error.jsp";
         }
     }
 
