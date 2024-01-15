@@ -1,5 +1,6 @@
 package com.mvc.context;
 
+import com.mvc.annotation.Autowired;
 import com.mvc.annotation.Controller;
 import com.mvc.annotation.Service;
 import com.mvc.handler.CusHandler;
@@ -8,9 +9,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.dom4j.io.SAXReader;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -30,7 +34,6 @@ public class CusWebApplicationContext {
     public void init() {
         //这里应该动态的从web.xml中动态的获取，在web.xml中有配置文件
         //String basePackage = XmlParser.getBasePackage("cusspringmvc.xml");
-
         String basePackage = XmlParser.getBasePackage(contextConfigLocation.split(":")[1]);
         String[] AllPackageArray = basePackage.split(",");
         if (AllPackageArray.length > 0) {
@@ -40,6 +43,8 @@ public class CusWebApplicationContext {
         }
         //注入到容器
         injectIOC();
+        //自动装配
+        executeAutoWired();
     }
 
 
@@ -72,7 +77,6 @@ public class CusWebApplicationContext {
 
     //根据路径反射实例,判断实例上是否有注解,符合的放到ioc容器中
     public void injectIOC() {
-
         if (classFullPathList.size() == 0) {
             return;
         } else {
@@ -83,14 +87,97 @@ public class CusWebApplicationContext {
                 try {
                     Class<?> aClass = Class.forName(s);
                     //判断有没有注解
-                    if (aClass.isAnnotationPresent(Controller.class) || aClass.isAnnotationPresent(Service.class)) {
+                    if (aClass.isAnnotationPresent(Controller.class)) {
                         ClassLoader classLoader = aClass.getClassLoader();
+                        Controller ControllerAnnotation = aClass.getAnnotation(Controller.class);
+                        String value = ControllerAnnotation.value();
+                        if (value != null && !value.equals("")) {
+                            className = value;
+                        }
                         //存在注解,注入到容器
                         //首字母小写
                         ioc.put(StringUtils.uncapitalize(className), classLoader.loadClass(s).newInstance());
+                    } else if (aClass.isAnnotationPresent(Service.class)) {
+                        //表示这些类被Service注解标识
+                        //先获取到注解的value值
+                        Service ServiceAnnotation = aClass.getAnnotation(Service.class);
+                        String value = ServiceAnnotation.value();
+                        if (value != null && !value.equals("")) {
+                            className = value;
+                        }
+
+                        Object instance = aClass.newInstance();
+                        //如果没有指定value
+                        //可以通过接口名/类名(首字母小写)注入到容器
+                        //1.反射得到所有接口的名称
+                        Class<?>[] interfaces = aClass.getInterfaces();
+                        for (Class<?> anInterface : interfaces) {
+                            //通过多个接口名来注入(首字母小写)
+                            //首字母小写
+                            String beanName = anInterface.getSimpleName().substring(0, 1).toLowerCase() +
+                                    anInterface.getSimpleName().substring(1);
+                            ioc.put(beanName, instance);
+                            ioc.put(className.substring(0,1).toLowerCase() + className.substring(1), instance);
+                        }
+
                     }
                 } catch (Exception e) {
                     System.out.println("发生了错误" + e);
+                }
+            }
+        }
+    }
+
+    //完成属性的自动装配
+    public void executeAutoWired() {
+        //判断ioc有没有装配的对象
+        if (ioc.isEmpty()) {
+            return;
+        } else {
+            //遍历ioc容器中的bean,获取到bean的所有字段,判断是否有@Autowired注解需要装配
+            Set<Map.Entry<String, Object>> entries = ioc.entrySet();
+            for (Map.Entry<String, Object> entry : entries) {
+                Class<?> aClass = entry.getValue().getClass();
+                Object bean = entry.getValue();
+                try {
+                    Field[] declaredFields = aClass.getDeclaredFields();
+                    if (declaredFields.length > 0) {
+                        for (Field declaredField : declaredFields) {
+                            if (declaredField.isAnnotationPresent(Autowired.class)) {
+                                //标识了@Autowired注解,需要进行自动装配
+                                //如果是私有的privite,需要爆破
+                                declaredField.setAccessible(true);
+                                //判断直接是否设置value
+                                Autowired AutowiredAnnotation = declaredField.getAnnotation(Autowired.class);
+                                String value = AutowiredAnnotation.value();
+                                if ("".equals(value)) {
+                                    //没有设置value
+                                    //从容器中按照 字段类型的首字母小写 查找
+                                    Class<?> type = declaredField.getType();
+                                    String simpleName = type.getSimpleName().substring(0,1).toLowerCase() + type.getSimpleName().substring(1);
+                                    Object o = ioc.get(simpleName);
+                                    if (o == null) {
+                                        throw new RuntimeException("ioc容器中不存在要自动装载的bean");
+                                    }else {
+                                        declaredField.set(bean,o);
+                                    }
+                                }else {
+                                    //有设置value
+                                    //从容器中按照 字段名 查找
+                                    Object o = ioc.get(value);
+                                    if (o == null) {
+                                        //查找不到
+                                        throw new RuntimeException("ioc容器中不存在要装配的bean");
+                                    }else {
+                                        declaredField.set(bean,o);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -103,4 +190,5 @@ public class CusWebApplicationContext {
     public CusWebApplicationContext(String contextConfigLocation) {
         this.contextConfigLocation = contextConfigLocation;
     }
+
 }
