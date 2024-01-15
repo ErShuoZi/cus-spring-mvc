@@ -1,5 +1,6 @@
 package com.controller;
 
+import com.entity.Monster;
 import com.mvc.annotation.Autowired;
 import com.mvc.annotation.Controller;
 import com.mvc.annotation.RequestMapping;
@@ -10,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 @Controller
 public class MonsterController {
@@ -34,7 +36,13 @@ public class MonsterController {
 
 
     @RequestMapping(value = "/monster/find")
-    //public void findMonsterByName(HttpServletRequest request, HttpServletResponse response, @RequestParam(value = "name") String  name)
+    //@RequestParam(value = "name")
+    public void findMonsterByName(HttpServletRequest request, HttpServletResponse response, String name){;
+        List<Monster> findedMonsterList = monsterService.findMonsterByName(name);
+        for (Monster monster : findedMonsterList) {
+            System.out.println(monster);
+        }
+    }
 
 
     public MonsterService getMonsterService() {

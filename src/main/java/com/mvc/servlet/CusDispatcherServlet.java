@@ -1,7 +1,9 @@
 package com.mvc.servlet;
 
+import com.entity.Monster;
 import com.mvc.annotation.Controller;
 import com.mvc.annotation.RequestMapping;
+import com.mvc.annotation.RequestParam;
 import com.mvc.context.CusWebApplicationContext;
 import com.mvc.handler.CusHandler;
 
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.*;
 
 /**
@@ -114,20 +117,58 @@ public class CusDispatcherServlet extends HttpServlet {
                 Object[] params = new Object[parameterTypes.length];
                 //3.遍历形参数组,根据形参数组信息,将实参填充到实参数组中
                 //这里使用普通for,为的是得到对应的索引i
-               for (int i = 0; i < parameterTypes.length; i++) {
-                   Class<?> parameterType = parameterTypes[i];
-                   //如果该形参是HttpServletRequest,就request添加到params实参数组\
-                   //在原生的SpringMVC中是根据类型判断，这里我做了简化
-                   if ("HttpServletRequest".equals(parameterType.getSimpleName())) {
-                       params[i] = request;
-                   }
-                   else if ("HttpServletResponse".equals(parameterType.getSimpleName())) {
-                       params[i] = response;
-                   }
-               }
+                for (int i = 0; i < parameterTypes.length; i++) {
+                    Class<?> parameterType = parameterTypes[i];
+                    //如果该形参是HttpServletRequest,就request添加到params实参数组\
+                    //在原生的SpringMVC中是根据类型判断，这里我做了简化
+                    if ("HttpServletRequest".equals(parameterType.getSimpleName())) {
+                        params[i] = request;
+                    } else if ("HttpServletResponse".equals(parameterType.getSimpleName())) {
+                        params[i] = response;
+                    }
+                }
+                //将http请求参数封装到params实参数组中
+                //要考虑实参的顺序问题
+
+                //1.获取http请求的参数集合
+                Map<String, String[]> parameterMap = request.getParameterMap();
+                //2.遍历parameterMap将请求参数按照顺序填充到实参数组
+                //返回的Map<String,String[]> String表示http的参数名；
+                //String[]表示http请求参数值
+                for (Map.Entry<String, String[]> stringEntry : parameterMap.entrySet()) {
+                    //取出key(参数名)
+                    String key = stringEntry.getKey();
+                    //取出参数值(简化,目前不考虑多个参数的情况)
+                    String s = stringEntry.getValue()[0];
+
+                    //得到请求的参数对应目标方法的第几个形参,将其填充
+                    //params[?] =
+                    int indexRequestParameterIndex = getIndexRequestParameterIndex(cusHandler.getMethod(), key);
+                    if (indexRequestParameterIndex != -1) {
+                        //找到了目标方法中的形参对应的索引
+                        params[indexRequestParameterIndex] = s;
+                    } else {
+                        //没有@RequestParmater注解,则使用默认机制进行配置
+                        //判断请求参数的名称要和接收的形参的名称一致
+
+                        //1.得到目标方法的所有形参的变量名称
+                        //2.得到目标方法的所有形参名进行遍历,如果匹配当前的请求的参数名称,则填充到实参数组
+
+                        List<String> allParamNameToList = getAllParamNameToList(cusHandler.getMethod());
+                        for (int i = 0; i < allParamNameToList.size(); i++) {
+                            if (key.equals(allParamNameToList.get(i))) {
+                                params[i] = s;
+                                break;
+                            }
+                        }
+
+
+                    }
+
+                }
 
                 //cusHandler.getMethod().invoke(cusHandler.getController(), request, response);
-                cusHandler.getMethod().invoke(cusHandler.getController(),params);
+                cusHandler.getMethod().invoke(cusHandler.getController(), params);
 
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -144,5 +185,45 @@ public class CusDispatcherServlet extends HttpServlet {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+
+    /**
+     * @param method 目标方法
+     * @param name   请求的参数名
+     * @return 是目标方法的第几个形参
+     */
+    public int getIndexRequestParameterIndex(Method method, String name) {
+        Parameter[] parameters = method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            Parameter parameter = parameters[i];
+            //判断parameter是否有@RequestParameter注解
+            if (parameter.isAnnotationPresent(RequestParam.class)) {
+                //存在该注解
+                RequestParam annotation = parameter.getAnnotation(RequestParam.class);
+                String value = annotation.value();
+                if (name.equals(value)) {
+                    return i;//找到请求参数对应目标方法的形参的位置
+                }
+            }
+        }
+        return -1;
+    }
+
+
+    /**
+     * @param method
+     * @return
+     */
+    public List<String> getAllParamNameToList(Method method) {
+        List<String> paramtersList = new ArrayList<>();
+        //获取所有参数
+        Parameter[] parameters = method.getParameters();
+        for (Parameter parameter : parameters) {
+            //parameter.getName() 不是形参真正的名字,而是arg0 arg1 arg2...
+            //解决这个问题需要配置idea编译 加入-paramter参数
+            paramtersList.add(parameter.getName());
+        }
+        return paramtersList;
     }
 }
