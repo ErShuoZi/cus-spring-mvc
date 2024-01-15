@@ -103,7 +103,32 @@ public class CusDispatcherServlet extends HttpServlet {
         if (cusHandler != null) {
             //匹配成功，反射调用控制器的方法
             try {
-                cusHandler.getMethod().invoke(cusHandler.getController(), request, response);
+                //这种写法是针对目标方法是
+                //public void listMonsters(HttpServletRequest request, HttpServletResponse response)
+                //但是要考虑到多参数的情况,将需要传递给目标方法的实参封装到数组,然后进行反射调用传入
+                //   public Object invoke(Object obj, Object... args)支持...args方式
+                //将HttpServletRequest 和 HttpServletResponse封装到参数数组
+                //1.得到目标方法的参数信息(形参)
+                Class<?>[] parameterTypes = cusHandler.getMethod().getParameterTypes();
+                //2.定义实参数组
+                Object[] params = new Object[parameterTypes.length];
+                //3.遍历形参数组,根据形参数组信息,将实参填充到实参数组中
+                //这里使用普通for,为的是得到对应的索引i
+               for (int i = 0; i < parameterTypes.length; i++) {
+                   Class<?> parameterType = parameterTypes[i];
+                   //如果该形参是HttpServletRequest,就request添加到params实参数组\
+                   //在原生的SpringMVC中是根据类型判断，这里我做了简化
+                   if ("HttpServletRequest".equals(parameterType.getSimpleName())) {
+                       params[i] = request;
+                   }
+                   else if ("HttpServletResponse".equals(parameterType.getSimpleName())) {
+                       params[i] = response;
+                   }
+               }
+
+                //cusHandler.getMethod().invoke(cusHandler.getController(), request, response);
+                cusHandler.getMethod().invoke(cusHandler.getController(),params);
+
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             } catch (InvocationTargetException e) {

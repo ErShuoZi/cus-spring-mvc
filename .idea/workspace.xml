@@ -9,15 +9,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6993735f-354f-4cee-a4d9-47eee49d30ec" name="Changes" comment="自定义SpringMvc&#10;10.动态的从web.xml文件中获取Spring配置文件名称">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/entity/Monster.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/mvc/annotation/Autowired.java" afterDir="false" />
+    <list default="true" id="6993735f-354f-4cee-a4d9-47eee49d30ec" name="Changes" comment="自定义SpringMvc&#10;11.自动装配">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/mvc/annotation/RequestParam.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/controller/MonsterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/controller/MonsterController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/mvc/annotation/Service.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/mvc/annotation/Service.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/mvc/context/CusWebApplicationContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/mvc/context/CusWebApplicationContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/service/Impl/MonsterServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/service/Impl/MonsterServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/service/MonsterService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/service/MonsterService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/mvc/servlet/CusDispatcherServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/mvc/servlet/CusDispatcherServlet.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -220,7 +216,7 @@
       <option name="presentableId" value="Default" />
       <updated>1703118258596</updated>
       <workItem from="1703118259621" duration="2454000" />
-      <workItem from="1705209307980" duration="34123000" />
+      <workItem from="1705209307980" duration="37604000" />
     </task>
     <task id="LOCAL-00001" summary="自定义SpringMvc&#10;1.新建自己实现的前端控制器(CusDispatcherServlet)&#10;2.配置Web.xml,配置自己模拟的前端控制器,指定该前端控制器的加载文件&#10;3.新建自定义注解及其对象的Controller类&#10;4.新建自己模拟的Spring容器(CusWebApplicationContext)&#10;5.在Spring中定义存放根据Spring配置文件配置的扫描的基本包路径获取到的类的全类名(包括子目录)&#10;6.由于Spring容器的初始化是和Tomcat的启动一起执行,则需要在前端控制器(CusDispathcherServlet)中的init方法中进行初始化操作(包括扫描包,以及注入包)&#10;7.创建CusHandler对象,该对象记录url和控制器方法的映射关系,url、controller对象、method方法&#10;8.在前端控制器定义一个HandlerList，用于保存映射关系,将容器中符合条件的的对象的映射关系(创建CusHandler对象)保存到HandlerList数组中,请求时,到该数组查找,如存在,找到该url对应的CusHandler的controller对象的方法通过反射进行调用">
       <created>1705228525674</created>
@@ -243,7 +239,14 @@
       <option name="project" value="LOCAL" />
       <updated>1705238608716</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="自定义SpringMvc&#10;11.自动装配">
+      <created>1705280573288</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1705280573288</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -253,6 +256,7 @@
     <MESSAGE value="自定义SpringMvc&#10;1.新建自己实现的前端控制器(CusDispatcherServlet)&#10;2.配置Web.xml,配置自己模拟的前端控制器,指定该前端控制器的加载文件&#10;3.新建自定义注解及其对象的Controller类&#10;4.新建自己模拟的Spring容器(CusWebApplicationContext)&#10;5.在Spring中定义存放根据Spring配置文件配置的扫描的基本包路径获取到的类的全类名(包括子目录)&#10;6.由于Spring容器的初始化是和Tomcat的启动一起执行,则需要在前端控制器(CusDispathcherServlet)中的init方法中进行初始化操作(包括扫描包,以及注入包)&#10;7.创建CusHandler对象,该对象记录url和控制器方法的映射关系,url、controller对象、method方法&#10;8.在前端控制器定义一个HandlerList，用于保存映射关系,将容器中符合条件的的对象的映射关系(创建CusHandler对象)保存到HandlerList数组中,请求时,到该数组查找,如存在,找到该url对应的CusHandler的controller对象的方法通过反射进行调用" />
     <MESSAGE value="自定义SpringMvc&#10;9.请求时,经过分发器(executeDispatch),分发器中会进行查找，成功则通过反射调用方法" />
     <MESSAGE value="自定义SpringMvc&#10;10.动态的从web.xml文件中获取Spring配置文件名称" />
-    <option name="LAST_COMMIT_MESSAGE" value="自定义SpringMvc&#10;10.动态的从web.xml文件中获取Spring配置文件名称" />
+    <MESSAGE value="自定义SpringMvc&#10;11.自动装配" />
+    <option name="LAST_COMMIT_MESSAGE" value="自定义SpringMvc&#10;11.自动装配" />
   </component>
 </project>

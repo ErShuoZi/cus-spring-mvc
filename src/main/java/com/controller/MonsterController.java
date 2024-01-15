@@ -3,6 +3,7 @@ package com.controller;
 import com.mvc.annotation.Autowired;
 import com.mvc.annotation.Controller;
 import com.mvc.annotation.RequestMapping;
+import com.mvc.annotation.RequestParam;
 import com.service.MonsterService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,6 +31,10 @@ public class MonsterController {
             throw new RuntimeException(e);
         }
     }
+
+
+    @RequestMapping(value = "/monster/find")
+    //public void findMonsterByName(HttpServletRequest request, HttpServletResponse response, @RequestParam(value = "name") String  name)
 
 
     public MonsterService getMonsterService() {
